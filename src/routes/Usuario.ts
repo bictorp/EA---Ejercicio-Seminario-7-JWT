@@ -2,6 +2,8 @@ import express from 'express';
 import controller from '../controllers/Usuario';
 import { Schemas, ValidateJoi } from '../middleware/Joi';
 
+import { authenticateToken } from '../middleware/auth';
+
 const router = express.Router();
 
 /**
