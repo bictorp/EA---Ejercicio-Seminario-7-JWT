@@ -19,8 +19,9 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     const token = this.authService.getToken() || '';
-    // Muestra solo los primeros 50 caracteres para no exponer el token completo
-    this.tokenPreview = token.substring(0, 50) + '...';
+    // Ahora mostramos el token completo para poder ver los cambios de firma
+    this.tokenPreview = token;
+    console.log('Token actual:', token);
   }
 
   logout(): void {
@@ -47,8 +48,9 @@ export class HomeComponent implements OnInit {
     this.authService.refreshToken().subscribe({
       next: (res: { accessToken: string }) => {
         const token = res.accessToken;
-        this.tokenPreview = token.substring(0, 50) + '...';
-        alert('Token refrescado correctamente');
+        this.tokenPreview = token; // Mostramos el token completo
+        console.log('Nuevo Token refrescado:', token);
+        alert('Token refrescado correctamente. Revisa la consola para comparar.');
       },
       error: (err: any) => {
         this.errorUsuarios = err.error?.message || 'Error al refrescar el token';

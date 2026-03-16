@@ -12,7 +12,7 @@ const refreshCookieOptions = {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
     maxAge: REFRESH_COOKIE_MAX_AGE,
-    path: '/auth'
+    path: '/'
 };
 
 /**
@@ -48,9 +48,6 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             usuario.organizacion as mongoose.Types.ObjectId
         );
 
-        usuario.refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-        await usuario.save();
-
         res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions);
 
         return res.status(200).json({
@@ -83,13 +80,7 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
         const payload = verifyRefreshToken(incomingRefreshToken);
         const usuario = await Usuario.findById(payload.sub);
 
-        if (!usuario || !usuario.refreshTokenHash) {
-            return res.status(401).json({ message: 'Refresh token inválido' });
-        }
-
-        const isRefreshTokenValid = await bcrypt.compare(incomingRefreshToken, usuario.refreshTokenHash);
-
-        if (!isRefreshTokenValid) {
+        if (!usuario) {
             return res.status(401).json({ message: 'Refresh token inválido' });
         }
 
@@ -105,9 +96,6 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
             usuario.email,
             usuario.organizacion as mongoose.Types.ObjectId
         );
-
-        usuario.refreshTokenHash = await bcrypt.hash(newRefreshToken, 10);
-        await usuario.save();
 
         res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, refreshCookieOptions);
 
@@ -130,13 +118,8 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
 
         if (incomingRefreshToken) {
             try {
-                const payload = verifyRefreshToken(incomingRefreshToken);
-                const usuario = await Usuario.findById(payload.sub);
-
-                if (usuario) {
-                    usuario.refreshTokenHash = null;
-                    await usuario.save();
-                }
+                // En esta versión sin persistencia, solo borramos la cookie.
+                // No hay rastro que limpiar en la BD.
             } catch (error) {
                 // noop
             }

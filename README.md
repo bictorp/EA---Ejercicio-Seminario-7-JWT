@@ -1,226 +1,121 @@
-# Express API — Mongoose + TypeScript In Depth
+# Seminario 7 EA — JWT y Web Sockets
 
-API REST construida con **Node.js**, **Express**, **TypeScript** y **Mongoose** que gestiona dos entidades principales: `Organizacion` y `Usuario`.
+¡Bienvenido al **Seminario 7 de Entornos de Aplicaciones (EA)**! Este repositorio contiene un proyecto completo que demuestra la implementación de autenticación segura utilizando **JWT (JSON Web Tokens)** con la estrategia de **Access Token y Refresh Token**. 
+
+> **IMPORTANTE: Web Sockets**
+> Actualmente te encuentras en la rama principal que cubre la parte de **JWT**.
+> Para acceder al contenido y código correspondiente al seminario de **Web Sockets**, debes **cambiar de rama**. Ejecuta el siguiente comando en tu terminal:
+> ```bash
+> git checkout socket_io
+> ```
 
 ---
 
-## Tecnologías
+## Objetivo del Proyecto (JWT)
 
-| Paquete | Versión | Uso |
-|---|---|---|
-| express | ^4.17.3 | Framework HTTP |
-| mongoose | ^6.13.9 | ODM para MongoDB |
-| joi | ^17.6.0 | Validación de esquemas en peticiones |
-| dotenv | ^16.0.0 | Variables de entorno |
-| cors | ^2.8.6 | Política de acceso cruzado |
-| chalk | ^4.1.2 | Logging con color en consola |
-| typescript | ^4.5.5 | Tipado estático (devDependency) |
+Este proyecto consiste en una **API REST** construida con **Node.js**, **Express**, **TypeScript** y **Mongoose**, que gestiona dos entidades principales (`Organizacion` y `Usuario`), junto con una aplicación **Frontend en Angular 17+** que consume dicha API.
+
+El objetivo principal de esta rama es entender cómo funciona el flujo de autenticación seguro:
+- **Access Token:** Token de corta duración para autenticar cada petición.
+- **Refresh Token:** Token de larga duración (HTTP-Only Cookie) para renovar el Access Token automáticamente de forma segura.
 
 ---
 
 ## Estructura del proyecto
 
+El proyecto está dividido en dos partes principales:
+
 ```
-src/
-├── server.ts              # Punto de entrada: conexión a Mongo e inicio del servidor
-├── swagger.ts              # Configuración del swagger
-├── config/
-│   └── config.ts          # Configuración de variables de entorno (Mongo + puerto)
-├── library/
-│   └── Logging.ts         # Utilidad de logging con colores (INFO / WARN / ERROR)
-├── middleware/
-│   └── Joi.ts             # Validación de payloads con Joi + schemas de cada entidad
-├── models/
-│   ├── Organizacion.ts    # Esquema/Modelo Mongoose de Organizacion
-│   └── Usuario.ts         # Esquema/Modelo Mongoose de Usuario
-├── controllers/
-│   ├── Organizacion.ts    # Lógica CRUD de Organizacion
-│   └── Usuario.ts         # Lógica CRUD de Usuario
-└── routes/
-    ├── Organizacion.ts    # Definición de rutas de Organizacion
-    └── Usuario.ts         # Definición de rutas de Usuario
+.
+├── backend/ (o directorio raíz de src/)
+│   ├── src/
+│   │   ├── server.ts              # Punto de entrada (Config y Mongo)
+│   │   ├── config/                # Var de entorno (.env)
+│   │   ├── controllers/           # Lógica HTTP (auth, usuarios, organizaciones)
+│   │   ├── middleware/            # JWT Auth Guards y validación Joi
+│   │   ├── models/                # Esquemas Mongoose
+│   │   ├── routes/                # Definición de ramas Express
+│   │   ├── services/              # Lógica de negocio (Interacción BD)
+│   │   └── utils/                 # Utilidades JWT (firmado y verificación)
+│   └── package.json
+│
+└── frontend/
+    ├── src/
+    │   ├── app/
+    │   │   ├── components/        # Componentes UI (si aplica)
+    │   │   ├── pages/             # Vistas principales (Login, Register, Home)
+    │   │   ├── services/          # Llamadas HTTP al backend
+    │   │   ├── interceptors/      # authInterceptor (Magia del Refresh Token)
+    │   │   └── app.routes.ts      # Enrutamiento y Guards de Angular
+    └── package.json
 ```
-
----
-
-## Descripción de cada archivo
-
-### `src/server.ts`
-Punto de entrada de la aplicación. Se encarga de:
-1. Conectar a MongoDB mediante Mongoose.
-2. Si la conexión es exitosa, inicia el servidor HTTP.
-3. Registra middlewares globales: logging de peticiones/respuestas, CORS, body parsers.
-4. Monta las rutas bajo los prefijos `/organizaciones` y `/usuarios`.
-5. Expone un healthcheck en `GET /ping`.
-6. Gestiona respuestas 404 para rutas no encontradas.
-
----
-
-### `src/config/config.ts`
-Lee las variables de entorno mediante `dotenv` y exporta el objeto `config` con dos secciones:
-- `mongo.url` — URI de conexión a MongoDB.
-- `server.port` — Puerto del servidor HTTP (por defecto `1337`).
-
----
-
-### `src/library/Logging.ts`
-Clase estática `Logging` con tres métodos de salida en consola, cada uno con un color diferente gracias a `chalk`:
-| Método | Color | Uso |
-|---|---|---|
-| `Logging.info()` | Azul | Información general |
-| `Logging.warning()` | Amarillo | Advertencias |
-| `Logging.error()` | Rojo | Errores |
-
----
-
-### `src/middleware/Joi.ts`
-Contiene dos exportaciones:
-
-- **`ValidateJoi(schema)`** — Middleware de orden superior que recibe un esquema Joi, valida el `req.body` y, si falla, devuelve `422 Unprocessable Entity`.
-- **`Schemas`** — Objeto con los esquemas de validación de cada entidad:
-  - `Schemas.organizacion.create` / `.update` → valida `{ name: string }`.
-  - `Schemas.usuario.create` / `.update` → valida `{ name: string, email: string, password: string (min 6), organizacion: ObjectId (24 hex) }`.
-
----
-
-### `src/models/Organizacion.ts`
-Define el modelo Mongoose `Organizacion` con la siguiente estructura:
-
-| Campo | Tipo | Requerido |
-|---|---|---|
-| `_id` | ObjectId | Sí (auto) |
-| `name` | String | Sí |
-
-Interfaces TypeScript exportadas: `IOrganizacion`, `IOrganizacionModel`.
-
----
-
-### `src/models/Usuario.ts`
-Define el modelo Mongoose `Usuario` con la siguiente estructura:
-
-| Campo | Tipo | Requerido | Notas |
-|---|---|---|---|
-| `_id` | ObjectId | Sí (auto) | |
-| `name` | String | Sí | |
-| `email` | String | Sí | Único |
-| `password` | String | Sí | |
-| `organizacion` | ObjectId | Sí | Referencia a `Organizacion` |
-| `createdAt` | Date | Auto | Generado por `timestamps: true` |
-| `updatedAt` | Date | Auto | Generado por `timestamps: true` |
-
-Interfaces TypeScript exportadas: `IUsuario`, `IUsuarioModel`.
-
----
-
-### `src/services/Organizacion.ts` y `src/services/Usuario.ts`
-Contienen la **lógica de negocio** y las llamadas directas a Mongoose. Es la capa encargada de interactuar con la persistencia de datos.
-
-
----
-
-### `src/controllers/Organizacion.ts` y `src/controllers/Usuario.ts`
-Gestionan el protocolo HTTP. Reciben los datos del `Request`, llaman a la capa de **Service** correspondiente y devuelven la respuesta en el `Response` con el código de estado adecuado. No conocen los detalles de implementación de la base de datos.
-
----
-
-### `src/routes/Organizacion.ts` y `src/routes/Usuario.ts`
-Registran los endpoints de cada recurso con sus middlewares de validación Joi correspondientes y delegan la lógica al controlador.
-
----
-
-## Configuración de MongoDB
-
-Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
-
-```env
-MONGO_URI="mongodb://localhost:27017/sem1"
-SERVER_PORT="1337"
-JWT_ACCESS_SECRET="tu_access_secret"
-JWT_REFRESH_SECRET="tu_refresh_secret"
-JWT_ACCESS_EXPIRES_IN="15m"
-JWT_REFRESH_EXPIRES_IN="7d"
-CORS_ORIGIN="http://localhost:4200"
-```
-
-La variable crítica es `MONGO_URI`. La base de datos usada por defecto es **`sem1`**.
 
 ---
 
 ## Autenticación con Access + Refresh Token
 
-### Dónde se guarda cada token
+### ¿Dónde se guarda cada token?
 
-- **Access Token**: se devuelve en el body de `POST /auth/login` y se guarda en `localStorage` del frontend para enviarlo en `Authorization: Bearer ...`.
-- **Refresh Token**: se guarda en una cookie `httpOnly` (no accesible por JavaScript) y además su hash se persiste en MongoDB (`Usuario.refreshTokenHash`).
+- **Access Token (Corta duración):** Devuelto en el body JSON durante el `POST /auth/login`. El frontend (Angular) lo intercepta y lo guarda en memoria o `localStorage` para incluirlo en `Authorization: Bearer <token>`.
+- **Refresh Token (Larga duración):** El backend lo devuelve en una cabecera de **cookie `httpOnly`** (no accesible por JS) por razones de seguridad.
 
-### Flujo implementado
+### El Flujo Implementado (La "Magia")
 
-1. `POST /auth/login`: valida credenciales, emite `accessToken` (corto) + `refreshToken` (largo), guarda hash del refresh token y setea cookie `httpOnly`.
-2. Si expira el access token, el frontend recibe `401` y llama automáticamente `POST /auth/refresh` con `withCredentials: true`.
-3. El backend valida firma del refresh token + hash en base de datos, rota refresh token y responde un nuevo `accessToken`.
-4. El interceptor reintenta la petición original con el nuevo access token.
-
-### Endpoints auth relevantes
-
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
+1. **Login:** El usuario se loguea. El backend devuelve un `accessToken` en el JSON y un `refreshToken` como cookie segura.
+2. **Uso Normal:** Angular envía el `accessToken` en cada petición protegida mediante el `authInterceptor`.
+3. **Expiración:** El `accessToken` caduca (ej. a los 15 minutos). El servidor rechaza la petición con un `401 Unauthorized`.
+4. **Refresh Automático:** El `authInterceptor` de Angular captura el error `401`, pausa la petición, e invoca silenciosamente a `POST /auth/refresh`. El navegador adjunta la cookie `httpOnly` automáticamente.
+5. **Reanudación:** El backend valida el refresh token y devuelve un nuevo `accessToken`. El interceptor lo actualiza y **reintenta** la petición original sin que el usuario se entere.
 
 ---
 
-## Endpoints de la API
+## Instalación y Ejecución
 
-El servidor corre en `http://localhost:1337` por defecto. La documentación interactiva está disponible en `/api`.
+Vas a necesitar **dos terminales**, una para el Backend y otra para el Frontend. Asegúrate de tener **MongoDB** ejecutándose en tu máquina (puerto 27017).
 
-### General
+### 1. Configurar el Backend
 
-| Método | URL | Descripción |
-|---|---|---|
-| `GET` | `/ping` | Healthcheck — devuelve `{ "hello": "world" }` |
+1. **Instala dependencias y arranca el servidor:**
+   ```bash
+   npm install
+   npm start
+   ```
+   *El servidor debería indicar que está corriendo en puerto 1337 y Mongo conectado.*
 
----
+### 2. Configurar el Frontend (Angular)
 
-### Organizaciones — `/organizaciones`
+1. Abre una nueva terminal y navega a la carpeta frontend:
+   ```bash
+   cd frontend
+   ```
 
-| Método | URL | Body (JSON) | Validación | Descripción | Respuesta éxito |
-|---|---|---|---|---|---|
-| `POST` | `/` | `{ "name": "string" }` | Joi required | Crea una nueva organización | `201` |
-| `GET` | `/` | — | — | Lista todas las organizaciones | `200` |
-| `GET` | `/:organizacionId` | — | — | Obtiene una organización por ID | `200` |
-| `PUT` | `/:organizacionId` | `{ "name": "string" }` | Joi required | Actualiza el nombre de una organización | `201` |
-| `DELETE` | `/:organizacionId` | — | — | Elimina una organización por ID | `201` |
+2. **Instala dependencias y arranca Angular:**
+   ```bash
+   npm install
+   npm start
+   ```
 
----
-
-### Usuarios — `/usuarios`
-
-| Método | URL | Body (JSON) | Validación | Descripción | Respuesta éxito |
-|---|---|---|---|---|---|
-| `POST` | `/` | `{ "name": string, "email": string, "password": password, "organizacion": "ObjectId" }` | Joi required | Crea un nuevo usuario | `201` |
-| `GET` | `/` | — | — | Lista todos los usuarios | `200` |
-| `GET` | `/:usuarioId` | — | — | Obtiene un usuario por ID (con populate de organización) | `200` |
-| `PUT` | `/:usuarioId` | `{ "name": string, ... }` | Joi required | Actualiza los datos de un usuario | `201` |
-| `DELETE` | `/:usuarioId` | — | — | Elimina un usuario por ID | `201` |
+3. **Prueba la aplicación!** Abre tu navegador en `http://localhost:4200`. Deberías poder:
+   - Registrarte (Crea un usuario).
+   - Iniciar sesión.
+   - Acceder a la página Home y ver la lista de usuarios.
 
 ---
 
-## 🎓 Ejercicio de Seminario
+## Endpoints de la API (Backend)
 
-En la carpeta `ejercicio-seminario/` encontrarás material didáctico sobre cómo implementar relaciones entre modelos en Mongoose (Manual vs Virtuals). 
+| Método | URL | Privado | Descripción |
+|---|---|---|---|
+| `POST` | `/auth/login` | No | Inicia sesión y devuelve JWT en Body + Cookie. |
+| `POST` | `/auth/refresh` | No | Refresca el Access Token usando la Cookie `httpOnly`. |
+| `POST` | `/auth/logout` | No | Cierra sesión limpiando la Cookie. |
+| `POST` | `/usuarios` | No | Registro de un nuevo usuario. |
+| `GET` | `/usuarios/:id` | Si | Obtiene usuario por ID. Requiere Token. |
+| `GET` | `/usuarios` | Si | Lista todos los usuarios. Requiere Token. |
+
+La documentación detallada interactiva generada con Swagger está disponible localmente en:
+`http://localhost:1337/api` (una vez arranques el backend)
 
 ---
 
-## Instalación y ejecución
-
-```bash
-# Instalar dependencias 
-npm install
-
-# Iniciar el servidor
-npm start
-```
-
-Para compilar manualmente:
-```bash
-npx tsc
-```
+Recuerda: si buscas el material de **Web Sockets**, ejecuta `git checkout socket_io`. ¡Diviértete explorando JWT!

@@ -7,7 +7,6 @@ export interface IUsuario {
     email: string;
     password: string;
     organizacion: mongoose.Types.ObjectId | string;
-    refreshTokenHash?: string | null;
 }
 
 export interface IUsuarioModel extends IUsuario, Document {}
@@ -17,8 +16,7 @@ const UsuarioSchema: Schema = new Schema(
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         password: { type: String, required: true },
-        organizacion: { type: Schema.Types.ObjectId, required: true, ref: 'Organizacion' },
-        refreshTokenHash: { type: String, required: false, default: null }
+        organizacion: { type: Schema.Types.ObjectId, required: true, ref: 'Organizacion' }
     },
     {
         timestamps: true,

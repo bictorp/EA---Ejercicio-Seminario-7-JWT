@@ -63,8 +63,6 @@ const router = express.Router();
  *   post:
  *     summary: Crea un usuario
  *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:

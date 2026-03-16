@@ -1,13 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { verifyAccessToken } from "../utils/jwt";
+import { verifyAccessToken, JwtPayload } from "../utils/jwt";
+
+
+export interface AuthRequest extends Request {
+    user?: JwtPayload;
+}
 
 export const authenticateToken = (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
- // Author: Bearer token
+
   const authHeader = req.headers["authorization"]; // Para leer el header de la peticion, la parte de Authorization
 
   const token = authHeader && authHeader.split(" ")[1]; // Aqui separa el token del header
@@ -18,7 +23,7 @@ export const authenticateToken = (
 
   try {
     const decoded = verifyAccessToken(token); // Verifica el access token
-    (req as any).user = decoded; // Agrega el usuario al request para que las rutas posteriores puedan acceder a el
+    req.user = decoded; 
     next(); // Si todo esta bien, pasa a la siguiente ruta
   } catch (err: any) {
     if (err instanceof jwt.TokenExpiredError) {
