@@ -34,3 +34,18 @@ export const authenticateToken = (
     return res.status(401).json({ message: "Token inválido" });
   }
 };
+//Ejercicio JWT:
+//Función que comprueba el rol del usuario.
+export const checkRole = (roles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+
+    if (!req.user.role || !roles.includes(req.user.role)) {
+      return res.status(403).json({ message: "No tienes permisos para acceder a este recurso" });
+    }
+
+    next();
+  };
+};

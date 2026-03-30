@@ -16,7 +16,10 @@
       <span *ngIf="!loadingUsuarios">Cargar Lista de Usuarios</span>
     </button>
     <button class="btn" (click)="refreshToken()">
-      Refrescar Token
+      Refresh Token
+    </button>
+    <button class="btn" (click)="goToAdminDashboard()" style="margin-left: 10px; background-color: #007bff; color: white;">
+      Ver Panel Admin
     </button>
 
     <div *ngIf="errorUsuarios" class="alert" style="margin-top: 10px;">

@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Usuario from '../models/Usuario';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 
+
 export const validateUserCredentials = async (email: string, password: string) => {
     const usuario = await Usuario.findOne({ email });
     if (!usuario) return null;
@@ -13,27 +14,33 @@ export const validateUserCredentials = async (email: string, password: string) =
     return usuario;
 };
 
+//Ejercicio JWT:
+//Función que crea los tokens de acceso y refresco.
 export const getTokens = (usuario: any) => {
     const accessToken = generateAccessToken(
         String(usuario._id),
         usuario.name,
         usuario.email,
-        usuario.organizacion as mongoose.Types.ObjectId
+        usuario.organizacion as mongoose.Types.ObjectId,
+        usuario.role
     );
     const refreshToken = generateRefreshToken(
         String(usuario._id),
         usuario.name,
         usuario.email,
-        usuario.organizacion as mongoose.Types.ObjectId
+        usuario.organizacion as mongoose.Types.ObjectId,
+        usuario.role
     );
 
     return { accessToken, refreshToken };
 };
 
+//Ejercicio JWT:
+//Función que refresca la sesión del usuario.
 export const refreshUserSession = async (incomingRefreshToken: string) => {
     const payload = verifyRefreshToken(incomingRefreshToken);
     const usuario = await Usuario.findById(payload.id);
-    
+
     if (!usuario) throw new Error('Usuario no encontrado');
 
     const tokens = getTokens(usuario);

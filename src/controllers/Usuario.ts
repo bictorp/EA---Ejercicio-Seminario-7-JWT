@@ -4,7 +4,7 @@ import UsuarioService from '../services/Usuario';
 import { AuthRequest } from '../middleware/auth';
 
 const createUsuario = async (req: Request, res: Response, next: NextFunction) => {
-   
+
     try {
         const savedUsuario = await UsuarioService.createUsuario(req.body);
         return res.status(201).json(savedUsuario);
@@ -69,4 +69,17 @@ const deleteUsuario = async (req: AuthRequest, res: Response, next: NextFunction
     }
 };
 
-export default { createUsuario, readUsuario, readAll, updateUsuario, deleteUsuario };
+//Ejercicio JWT:
+//Función que crea el panel de administración.
+const adminDashboard = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        return res.status(200).json({
+            message: 'Bienvenido al panel de administración',
+            data: 'Datos sensibles y estadísticas confidenciales'
+        });
+    } catch (error) {
+        return res.status(500).json({ error });
+    }
+};
+
+export default { createUsuario, readUsuario, readAll, updateUsuario, deleteUsuario, adminDashboard };

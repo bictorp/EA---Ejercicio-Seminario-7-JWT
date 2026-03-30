@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService, Usuario } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -15,7 +16,7 @@ export class HomeComponent implements OnInit {
   loadingUsuarios = false;
   errorUsuarios = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     const token = this.authService.getToken() || '';
@@ -26,6 +27,10 @@ export class HomeComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  goToAdminDashboard(): void {
+    this.router.navigate(['/admin-dashboard']);
   }
 
   cargarUsuarios(): void {

@@ -41,7 +41,7 @@ const API_URL = 'http://localhost:1337';
 })
 export class AuthService {
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) { }
 
   /**
    * Registra un nuevo usuario. NO genera token.
@@ -88,6 +88,14 @@ export class AuthService {
    */
   getUsuarios(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(`${API_URL}/usuarios`);
+  }
+
+  /**
+   * Ejercicio JWT:
+   * Petición protegida para probar el token con rol de admin.
+   */
+  getAdminDashboard(): Observable<any> {
+    return this.http.get<any>(`${API_URL}/usuarios/admin/dashboard`);
   }
 
   /** Obtiene el token del localStorage */

@@ -2,7 +2,7 @@ import express from 'express';
 import controller from '../controllers/Usuario';
 import { Schemas, ValidateJoi } from '../middleware/Joi';
 
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, checkRole } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -77,6 +77,24 @@ const router = express.Router();
  */
 router.post('/', ValidateJoi(Schemas.usuario.create), controller.createUsuario);
 
+//Ejercicio JWT:
+//Función que crea el panel de administración.
+/**
+ * @openapi
+ * /usuarios/admin/dashboard:
+ *   get:
+ *     summary: Ruta restringida para administradores
+ *     tags: [Usuarios, Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ *       403:
+ *         description: Forbidden - Requiere rol de admin
+ */
+router.get('/admin/dashboard', authenticateToken, checkRole(['admin']), controller.adminDashboard);
+
 /**
  * @openapi
  * /usuarios/{usuarioId}:
@@ -98,7 +116,7 @@ router.post('/', ValidateJoi(Schemas.usuario.create), controller.createUsuario);
  *       404:
  *         description: No encontrado
  */
-router.get('/:usuarioId',authenticateToken ,controller.readUsuario);
+router.get('/:usuarioId', authenticateToken, controller.readUsuario);
 
 /**
  * @openapi
@@ -112,7 +130,7 @@ router.get('/:usuarioId',authenticateToken ,controller.readUsuario);
  *       200:
  *         description: OK
  */
-router.get('/',authenticateToken, controller.readAll);
+router.get('/', authenticateToken, controller.readAll);
 
 /**
  * @openapi
@@ -143,7 +161,7 @@ router.get('/',authenticateToken, controller.readAll);
  *       422:
  *         description: Validación fallida (Joi)
  */
-router.put('/:usuarioId',authenticateToken, ValidateJoi(Schemas.usuario.update), controller.updateUsuario);
+router.put('/:usuarioId', authenticateToken, ValidateJoi(Schemas.usuario.update), controller.updateUsuario);
 
 /**
  * @openapi
@@ -166,6 +184,6 @@ router.put('/:usuarioId',authenticateToken, ValidateJoi(Schemas.usuario.update),
  *       404:
  *         description: No encontrado
  */
-router.delete('/:usuarioId',authenticateToken, controller.deleteUsuario);
+router.delete('/:usuarioId', authenticateToken, controller.deleteUsuario);
 
 export default router;

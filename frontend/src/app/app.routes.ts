@@ -19,5 +19,15 @@ export const routes: Routes = [
       import('./pages/home/home.component').then((m) => m.HomeComponent),
     canActivate: [authGuard]
   },
+  {
+    // Ejercicio JWT:
+    //Explicación de lo que hace:
+    //Es el guardia de seguridad en la puerta de la zona VIP. 
+    //Antes de que Angular intente cargar la pantalla, comprueba si tienes alguna pulsera(el JWT en localStorage).
+    path: 'admin-dashboard',
+    loadComponent: () =>
+      import('./pages/admin-dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: 'login' }
 ];

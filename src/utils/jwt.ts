@@ -3,8 +3,10 @@ import mongoose from "mongoose";
 import { config } from "../config/config";
 import { IJwtPayload } from "../models/JwtPayload";
 
-export const generateAccessToken = (userId: string, name: string, email: string, organizacion: mongoose.Types.ObjectId | string) => {
-    const payload: IJwtPayload = { id: userId, name, email, organizacion: String(organizacion) };
+//Ejercicio JWT:
+//Función que crea el token de acceso.
+export const generateAccessToken = (userId: string, name: string, email: string, organizacion: mongoose.Types.ObjectId | string, role: string) => {
+    const payload: IJwtPayload = { id: userId, name, email, organizacion: String(organizacion), role };
     return jwt.sign(
         payload,
         config.jwt.accessSecret,
@@ -12,8 +14,10 @@ export const generateAccessToken = (userId: string, name: string, email: string,
     );
 };
 
-export const generateRefreshToken = (userId: string, name: string, email: string, organizacion: mongoose.Types.ObjectId | string) => {
-    const payload: IJwtPayload = { id: userId, name, email, organizacion: String(organizacion) };
+//Ejercicio JWT:
+//Función que crea el token de refresco.
+export const generateRefreshToken = (userId: string, name: string, email: string, organizacion: mongoose.Types.ObjectId | string, role: string) => {
+    const payload: IJwtPayload = { id: userId, name, email, organizacion: String(organizacion), role };
     return jwt.sign(
         payload,
         config.jwt.refreshSecret,

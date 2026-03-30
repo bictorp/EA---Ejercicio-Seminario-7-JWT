@@ -1,0 +1,13 @@
+<div class="admin-container">
+  <h2>Panell d'Administració</h2>
+  
+  <div *ngIf="message" class="success-box">
+    <h3>{{ message }}</h3>
+    <p>{{ data }}</p>
+  </div>
+
+  <div *ngIf="error" class="error-box">
+    <h3>Accés Denegat</h3>
+    <p>{{ error }}</p>
+  </div>
+</div>
